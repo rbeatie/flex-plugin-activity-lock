@@ -1,5 +1,5 @@
+export const ACTION_TOGGLE_ACTIVITY = 'TOGGLE_ACTIVITY';
 const ACTION_DISMISS_BAR = 'DISMISS_BAR';
-const ACTION_TOGGLE_ACTIVITY = 'TOGGLE_ACTIVITY';
 
 const initialState = {
   isOpen: true,
@@ -25,7 +25,6 @@ export function reduce(state = initialState, action) {
         activityLocked: !state.activityLocked,
       };
     }
-
 
     default:
       return state;

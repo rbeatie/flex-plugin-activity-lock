@@ -1,23 +1,11 @@
 import React from 'react';
 import { VERSION } from '@twilio/flex-ui';
 import { FlexPlugin } from 'flex-plugin';
-
 import CustomTaskListContainer from './components/CustomTaskList/CustomTaskList.Container';
 import reducers, { namespace } from './states';
 
 const PLUGIN_NAME = 'ActivityLockPlugin';
 
-const ActivityButton = ({handler, manager, flex}) => (<div>
-  <button
-    onClick={() => {
-      handler('Offline', manager);
-    }}
-  >Change to Offline</button>
-  <button
-    onClick={() => {
-      handler('Available');
-    }}
-  >Change to Available</button></div>);
 export default class ActivityLockPlugin extends FlexPlugin {
   constructor() {
     super(PLUGIN_NAME);
@@ -31,27 +19,15 @@ export default class ActivityLockPlugin extends FlexPlugin {
    * @param manager { import('@twilio/flex-ui').Manager }
    */
   init(flex, manager) {
-    /**
-     ** payload: { activityAvailable?: boolean,
-     *  activityName?: string,
-     *  activitySid?: string,
-     *  rejectPendingReservations?: boolean
-     *  }
-     */
+
     flex.Actions.replaceAction('SetActivity', (payload, original) => {
       const currentState = manager.store.getState();
-      const {activityLocked} = currentState['activity-lock'];
+      const {activityLocked} = currentState['activity-lock'].customTaskList;
+      console.log('Locked?', activityLocked);
       if (!activityLocked) {
         return original(payload);
       }
     });
-
-    flex.SideNav.Content.add(<ActivityButton
-      key="activitybutton"
-      manager={manager}
-      flex={flex}
-      handler={this.activityButtonHandler}
-    />);
 
     this.registerReducers(manager);
 
@@ -60,23 +36,15 @@ export default class ActivityLockPlugin extends FlexPlugin {
     flex.AgentDesktopView
       .Panel1
       .Content
-      .add(<CustomTaskListContainer key="demo-component" />, options);
+      .add(<CustomTaskListContainer
+        manager={manager}
+        flex={flex}
+        key="demo-component"
+      />, options);
 
   }
 
-  activityButtonHandler(activityName, manager, flex){
-    const activities = manager.store.getState().flex.worker.activities;
-    const activity = activities.value;
-    console.log(activity);
-    for (let i = 0; i < activities.size; i++) {
-      if ( activity.value.friendlyName === activityName) break;
-       activity.next();
-    }
-    flex.Actions.invokeAction(
-      'SetActivity',
-      {activities, activity, offlineAllowed: true}
-      );
-  }
+
   /**
    * Registers the plugin reducers
    *
@@ -84,6 +52,7 @@ export default class ActivityLockPlugin extends FlexPlugin {
    */
   registerReducers(manager) {
     if (!manager.store.addReducer) {
+
       // eslint: disable-next-line
       console.error(`You need FlexUI > 1.9.0 to use built-in redux; you are currently on ${VERSION}`);
       return;
